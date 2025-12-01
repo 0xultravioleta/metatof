@@ -4,45 +4,22 @@ import { LifeLine } from './LifeLine.js';
 import { VesicaPiscis } from './VesicaPiscis.js';
 import { ConsciousnessController } from './ConsciousnessController.js';
 import { EventSystem } from './EventSystem.js';
+import { GalaxyBackground } from './GalaxyBackground.js';
 
 // Configuración básica
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000005); // Fondo cósmico oscuro
-scene.fog = new THREE.FogExp2(0x000005, 0.02);
+scene.fog = new THREE.FogExp2(0x000005, 0.002);
 
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping; // Mejor color
 document.body.appendChild(renderer.domElement);
 
-// Fondo de Galaxia (Partículas)
-const starGeo = new THREE.BufferGeometry();
-const starCount = 5000;
-const posArray = new Float32Array(starCount * 3);
-const colorArray = new Float32Array(starCount * 3);
+// Fondo de Galaxia (Nuevo Componente)
+const galaxy = new GalaxyBackground(scene);
 
-for (let i = 0; i < starCount * 3; i += 3) {
-  posArray[i] = (Math.random() - 0.5) * 400; // X
-  posArray[i + 1] = (Math.random() - 0.5) * 400; // Y
-  posArray[i + 2] = (Math.random() - 0.5) * 400 - 100; // Z (Profundidad)
-
-  // Colores galácticos (Azul, Violeta, Rosa)
-  const colorType = Math.random();
-  if (colorType < 0.33) {
-    colorArray[i] = 0.5; colorArray[i + 1] = 0.5; colorArray[i + 2] = 1.0; // Azul
-  } else if (colorType < 0.66) {
-    colorArray[i] = 1.0; colorArray[i + 1] = 0.0; colorArray[i + 2] = 1.0; // Magenta
-  } else {
-    colorArray[i] = 1.0; colorArray[i + 1] = 1.0; colorArray[i + 2] = 1.0; // Blanco
-  }
-}
-
-starGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-starGeo.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
-const starMat = new THREE.PointsMaterial({ size: 0.5, vertexColors: true, transparent: true, opacity: 0.8 });
-const starMesh = new THREE.Points(starGeo, starMat);
-scene.add(starMesh);
 const ambientLight = new THREE.AmbientLight(0x404040);
 scene.add(ambientLight);
 const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
@@ -196,7 +173,7 @@ function animate() {
   updateDimensionUI(consciousness);
 
   // Animar fondo
-  starMesh.rotation.z += 0.0005;
+  galaxy.update(time);
 
   renderer.render(scene, camera);
 }
