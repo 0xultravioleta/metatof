@@ -94,10 +94,9 @@ document.body.appendChild(uiDiv);
 const consValSpan = document.getElementById('cons-val');
 
 // Loop de animación
-function animate() {
+function animate(timestamp = 0) {
+  const seconds = timestamp * 0.001;
   requestAnimationFrame(animate);
-
-  time += 0.01;
 
   // Actualizar controlador
   consciousnessController.update();
@@ -111,13 +110,7 @@ function animate() {
   progress += speed;
   if (progress > 1) progress = 0;
 
-  // Posición base en la línea (siempre centro/neutro para la referencia física de la línea)
-  // La "línea" que vemos es la estructura física.
-  // Pero visualmente queremos que el nodo activo esté "sobre" la línea correspondiente.
-  // El usuario dijo: "la sephirota actual es la que navega en ese momento por la LINEA".
-
-  // Obtenemos el punto en la curva interpolada según la conciencia actual
-  // Esto hace que subamos a la línea Verde o bajemos a la Roja físicamente
+  // Posición base en la línea
   const position = lifeLine.getPointAt(progress, consciousness);
   const tangent = lifeLine.getTangentAt(progress);
 
@@ -125,64 +118,52 @@ function animate() {
   const activeNodePos = new THREE.Vector3(...treeVessel.getActiveNodePosition(consciousness));
 
   // Compensar la rotación del árbol
-  // El árbol rota en Y, así que debemos rotar el vector de posición local del nodo
   activeNodePos.applyAxisAngle(new THREE.Vector3(0, 1, 0), treeVessel.group.rotation.y);
 
   // Mover el Árbol-Nave
-  // Queremos que (TreePos + RotatedActiveNodePos) = LinePos
-  // Por tanto: TreePos = LinePos - RotatedActiveNodePos
-
   const treePos = position.clone();
-  treePos.sub(activeNodePos); // Restar vector rotado completo (X, Y, Z)
-
-  // Mantenemos Z alineado con la curva?
-  // Si restamos Z, el árbol se moverá adelante/atrás para que el nodo coincida en Z.
-  // Esto es correcto si queremos que el nodo esté EXACTAMENTE en el punto de la curva.
-
+  treePos.sub(activeNodePos);
   treeVessel.group.position.copy(treePos);
 
-  // Orientar el árbol hacia adelante
-  // Miramos un punto futuro en la MISMA trayectoria interpolada
+  // Orientar el árbol hacia adelante (SOLO ROTACIÓN Y)
+  // Evitamos lookAt completo para que no se incline (pitch/roll) y parezca "skewed"
   const lookAtPos = lifeLine.getPointAt(Math.min(1, progress + 0.01), consciousness);
-  // Ajustar lookAt para que el árbol no se incline locamente, solo rote en Y
-  treeVessel.group.lookAt(lookAtPos.x, treeVessel.group.position.y, lookAtPos.z);
-  // Rotación sutil basada en movimiento
-  // treeVessel.group.rotation.z = -consciousness * 0.5; // ELIMINADO para evitar torcedura
-  treeVessel.group.rotation.x = Math.sin(time) * 0.1;
+  const direction = new THREE.Vector3().subVectors(lookAtPos, position).normalize();
+  const angleY = Math.atan2(direction.x, direction.z);
+
+  treeVessel.group.rotation.set(0, angleY, 0); // Solo rotación Y, árbol vertical
+
+  // Rotación X eliminada ("no tiene por que rotar")
+  // treeVessel.group.rotation.x = Math.sin(seconds) * 0.1;
 
   // Cámara en 1ra/3ra persona
-  // Debe estar alineada con la línea (Y=0 aprox) mirando adelante
-  // "First person... ruta que deberia manejar un plano"
-
   const camPos = position.clone();
-  camPos.y += 2; // Un poco arriba de la línea para verla
-  camPos.z += 10; // Detrás
-  // Ajustar con tangente
+  camPos.y += 2;
+  camPos.z += 10;
   const backOffset = tangent.clone().multiplyScalar(-8);
   camPos.add(backOffset);
 
   camera.position.lerp(camPos, 0.1);
-  camera.lookAt(position.clone().add(tangent.clone().multiplyScalar(20))); // Mirar lejos adelante
+  camera.lookAt(position.clone().add(tangent.clone().multiplyScalar(20)));
 
   // Actualizar componentes
-  vesica.update(time);
-  treeVessel.update(consciousness);
+  vesica.update(seconds);
+  treeVessel.update(seconds, consciousness);
   lifeLine.update(consciousness);
   eventSystem.checkEvents(progress, consciousness);
 
   updateDimensionUI(consciousness);
 
   // Animar fondo
-  galaxy.update(time);
+  galaxy.update(seconds);
 
   renderer.render(scene, camera);
 }
 
+requestAnimationFrame(animate);
 // Manejo de resize
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
-
-animate();

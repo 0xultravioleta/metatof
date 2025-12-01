@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 
-// Colores Neón Vibrantes
-// Ajuste de posiciones: Desplazamiento vertical (+4) para separar de Qliphoth y dejar espacio a la Vesica
+// --- DATA ---
 const SEFIROT_DATA = [
     { name: "Kéter", meaning: "Corona", color: 0xffffff, position: [0, 14, 0] },
     { name: "Jojmá", meaning: "Sabiduría", color: 0x00ffff, position: [3, 12, 0] },
@@ -28,30 +27,13 @@ const QLIPHOTH_DATA = [
     { name: "Lilith", meaning: "Reina de la Noche", color: 0x221100, position: [0, -2, 0], outline: 0x884400 }
 ];
 
-// Las 22 Conexiones Canónicas del Árbol de la Vida
 const CONNECTIONS = [
-    // Horizontales
-    [1, 2], // Jojma-Binah
-    [3, 4], // Jesed-Gevura
-    [6, 7], // Netsaj-Hod
-
-    // Verticales (Pilares)
-    [0, 5], // Keter-Tiferet (Pilar Medio)
-    [5, 8], // Tiferet-Yesod (Pilar Medio)
-    [8, 9], // Yesod-Maljut (Pilar Medio)
-    [1, 3], // Jojma-Jesed (Pilar Derecho)
-    [3, 6], // Jesed-Netsaj (Pilar Derecho)
-    [2, 4], // Binah-Gevura (Pilar Izquierdo)
-    [4, 7], // Gevura-Hod (Pilar Izquierdo)
-    [6, 9], // Netsaj-Maljut (Derecho inferior)
-    [7, 9], // Hod-Maljut (Izquierdo inferior)
-
-    // Diagonales
-    [0, 1], [0, 2], // Keter a Jojma/Binah
-    [1, 5], [2, 5], // Jojma/Binah a Tiferet
-    [3, 5], [4, 5], // Jesed/Gevura a Tiferet
-    [5, 6], [5, 7], // Tiferet a Netsaj/Hod
-    [6, 8], [7, 8]  // Netsaj/Hod a Yesod
+    [1, 2], [3, 4], [6, 7], // Horizontales
+    [0, 5], [5, 8], [8, 9], // Pilar Medio
+    [1, 3], [3, 6], // Pilar Derecho
+    [2, 4], [4, 7], // Pilar Izquierdo
+    [6, 9], [7, 9], // Inferiores
+    [0, 1], [0, 2], [1, 5], [2, 5], [3, 5], [4, 5], [5, 6], [5, 7], [6, 8], [7, 8] // Diagonales
 ];
 
 export class TreeVessel {
@@ -85,7 +67,7 @@ export class TreeVessel {
                 mesh.add(outline);
             }
 
-            mesh.userData = { ...data, type: 'sefira', originalPos: new THREE.Vector3(...data.position) };
+            mesh.userData = { ...data, type: 'sefira' };
             this.group.add(mesh);
             this.sefirotMeshes.push(mesh);
         });
@@ -97,11 +79,10 @@ export class TreeVessel {
                 roughness: 0.8,
                 metalness: 0.2,
                 emissive: data.color,
-                emissiveIntensity: 0.4
+                emissiveIntensity: 0.5 // Suficiente para verse en la oscuridad
             });
             const mesh = new THREE.Mesh(geometry, material);
             const sefiraPos = SEFIROT_DATA[index].position;
-            // Reflejo exacto hacia abajo
             const pos = new THREE.Vector3(sefiraPos[0], -sefiraPos[1], sefiraPos[2]);
             mesh.position.copy(pos);
 
@@ -112,7 +93,7 @@ export class TreeVessel {
                 mesh.add(outline);
             }
 
-            mesh.userData = { ...data, type: 'qlipha', originalPos: pos };
+            mesh.userData = { ...data, type: 'qlipha' };
             this.group.add(mesh);
             this.qliphothMeshes.push(mesh);
         });
@@ -164,29 +145,22 @@ export class TreeVessel {
         this.group.add(edge);
     }
 
-    update(consciousness) {
-        this.group.rotation.y += 0.002;
-
+    update(time, consciousness) {
+        // Animación simple de pulsación basada en escala y emisividad
         this.sefirotMeshes.forEach(mesh => {
-            const pulse = Math.sin(Date.now() * 0.002) * 0.2 + 1;
+            const pulse = Math.sin(time * 2.0) * 0.1 + 1;
             mesh.scale.setScalar(pulse * (0.8 + Math.max(0, consciousness) * 0.2));
-            mesh.material.emissiveIntensity = 0.8 + Math.max(0, consciousness);
+            mesh.material.emissiveIntensity = 0.8 + Math.max(0, consciousness) * 0.5;
         });
 
         this.qliphothMeshes.forEach(mesh => {
-            if (consciousness < -0.3) {
-                // Glitch visual: Vibrar alrededor de la posición original
-                const noiseX = (Math.random() - 0.5) * 0.2;
-                const noiseY = (Math.random() - 0.5) * 0.2;
-
-                mesh.position.copy(mesh.userData.originalPos); // Reset
-                mesh.position.x += noiseX;
-                mesh.position.y += noiseY;
-            } else {
-                // Asegurar que vuelvan a su sitio si sube la conciencia
-                mesh.position.copy(mesh.userData.originalPos);
-            }
+            // Sin distorsión de vértices, solo pulsación leve si es necesario
+            // O simplemente estáticos y visibles
+            mesh.material.emissiveIntensity = 0.5;
         });
+
+        // CERO rotación del grupo
+        this.group.rotation.set(0, 0, 0);
     }
 
     getActiveNodePosition(consciousness) {
