@@ -16,10 +16,10 @@ export class StoryPanel {
         this.panel.id = 'story-panel';
         this.panel.style.cssText = `
             position: fixed;
-            bottom: 140px;
+            bottom: 100px;
             left: 20px;
             width: 340px;
-            height: 500px;
+            height: 750px;
             background: rgba(0, 0, 0, 0.92);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
@@ -107,14 +107,14 @@ export class StoryPanel {
             this.panel.style.width = 'calc(100vw - 40px)';
             this.panel.style.left = '20px';
             this.panel.style.right = '20px';
-            this.panel.style.height = '400px';
+            this.panel.style.height = '50vh';
             this.panel.style.bottom = '140px';
         } else {
             this.panel.style.width = '340px';
             this.panel.style.left = '20px';
             this.panel.style.right = 'auto';
-            this.panel.style.height = '500px';
-            this.panel.style.bottom = '140px';
+            this.panel.style.height = '750px';
+            this.panel.style.bottom = '100px';
         }
     }
 

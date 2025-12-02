@@ -68,7 +68,7 @@ TU ESTILO ES FUNDAMENTAL:
 REGLAS ABSOLUTAS:
 - Escribe en espanol
 - Primera persona (el alma cuenta su historia)
-- MAXIMO 3 PARRAFOS (150 palabras total maximo)
+- MAXIMO 4 PARRAFOS (230 palabras total maximo)
 - Cada parrafo debe ser conciso y poetico
 - NO uses palabras como: Sefira, Qliphoth, Tikun, transmutacion, encarnacion
 - SI usa palabras como: luz, sombra, corazon, alma, camino, aprender, crecer, caer, levantarse`;
@@ -102,11 +102,12 @@ ${describeTrajectory(history)}
 
 ---
 
-Escribe una narrativa de 3 PARRAFOS (maximo 150 palabras en total).
+Escribe una narrativa de 4 PARRAFOS (maximo 230 palabras en total).
 
 Parrafo 1: Como comenzo el viaje y los primeros desafios.
-Parrafo 2: Los momentos de luz y sombra que marcaron el camino.
-Parrafo 3: La leccion final que el alma se lleva.
+Parrafo 2: Los momentos de luz que iluminaron el camino.
+Parrafo 3: Las sombras que probaron el alma.
+Parrafo 4: La leccion final y lo que se lleva al partir.
 
 Se poetico pero conciso. Cada palabra debe tener peso.`;
 
@@ -149,7 +150,7 @@ async function callAnthropic(systemPrompt, userPrompt, apiKey) {
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 500,
+      max_tokens: 700,
       system: systemPrompt,
       messages: [
         { role: "user", content: userPrompt }
@@ -175,7 +176,7 @@ async function callOpenAI(systemPrompt, userPrompt, apiKey) {
     },
     body: JSON.stringify({
       model: "gpt-4o",
-      max_tokens: 500,
+      max_tokens: 700,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
@@ -194,49 +195,50 @@ async function callOpenAI(systemPrompt, userPrompt, apiKey) {
 
 // Event generation prompt
 function buildEventGenerationPrompt(karma) {
-  const systemPrompt = `Eres un disenador de destinos. Tu trabajo es crear los eventos que marcaran una vida humana.
+  const systemPrompt = `Eres un disenador de destinos. Tu trabajo es crear los eventos que marcaran una vida humana COHERENTE.
 
-Cada vida tiene:
-- Eventos universales (nacimiento, mayoria de edad, muerte)
-- Eventos estandar (hitos normales de la vida)
-- Eventos karmicos (pruebas y desafios)
-- Eventos dharmicos (bendiciones y regalos)
+REGLA CRITICA DE COHERENCIA:
+Los eventos deben tener SENTIDO NARRATIVO. Cada evento afecta los siguientes:
+- Si hay "Divorcio" a los 40, NO puede haber "Bodas de Oro" a los 70
+- Si hay "Muerte de Conyuge" a los 60, NO puede haber eventos de pareja despues
+- Si hay "Bancarrota" a los 45, los eventos siguientes deben reflejar pobreza o recuperacion
+- Si hay "Enfermedad Terminal" no puede haber "Curacion Milagrosa" despues a menos que sea dharmic
+- Los hijos solo pueden nacer si hubo matrimonio o relacion antes
+- "Boda de Hijo" solo si antes hubo "Nacimiento de Hijo"
 
 El karma de la vida anterior determina la proporcion:
-- Karma negativo (< -0.2): Mas pruebas duras, menos regalos
-- Karma positivo (> 0.2): Mas bendiciones, menos pruebas
-- Karma neutro: Balance equilibrado
+- Karma negativo (< -0.2): Mas pruebas duras, vida dificil
+- Karma positivo (> 0.2): Mas bendiciones, vida afortunada
+- Karma neutro: Balance de luz y sombra
 
 REGLAS:
-- Genera exactamente 20-25 eventos (sin contar nacimiento y muerte)
-- Cada evento tiene: nombre corto (max 4 palabras), edad (0-99), tipo (standard/karmic/dharmic)
-- Los eventos deben ser REALISTAS y VARIADOS
-- No repitas eventos similares
-- Distribuye los eventos a lo largo de toda la vida
-- Los nombres deben ser en espanol, concretos y evocadores
-- Evita cliches - se creativo con las situaciones
+- Genera 18-22 eventos coherentes entre si
+- Cada evento: nombre corto (max 4 palabras), edad (4-95), tipo (standard/karmic/dharmic)
+- PIENSA EN LA HISTORIA COMPLETA antes de generar
+- Los eventos deben formar una narrativa logica
+- En espanol, concretos y evocadores
 
-FORMATO DE RESPUESTA (JSON estricto):
-[
-  {"name": "Nombre del Evento", "age": 25, "type": "standard"},
-  ...
-]`;
+FORMATO JSON:
+[{"name": "Evento", "age": 25, "type": "standard"}]`;
 
-  const karmaDescription = karma < -0.2 ? "negativo (vida previa en sombra)" :
-                           karma > 0.2 ? "positivo (vida previa en luz)" :
-                           "neutro (vida previa equilibrada)";
+  const karmaDescription = karma < -0.2 ? "negativo (vida dificil)" :
+                           karma > 0.2 ? "positivo (vida afortunada)" :
+                           "neutro (vida balanceada)";
 
-  const userPrompt = `Genera los eventos para una nueva vida. El karma heredado es ${karma.toFixed(2)} (${karmaDescription}).
+  const userPrompt = `Karma heredado: ${karma.toFixed(2)} (${karmaDescription}).
 
-Crea una vida unica e interesante. Incluye:
-- Eventos de infancia y adolescencia
-- Relaciones (amigos, amor, familia)
-- Trabajo y logros profesionales
-- Crisis y superaciones
-- Momentos de alegria y de dolor
-- El final de la vida
+IMPORTANTE: Genera una vida COHERENTE donde cada evento tenga consecuencias logicas en los siguientes.
 
-Responde SOLO con el JSON array, sin explicaciones.`;
+Ejemplo de MALA coherencia (NO HACER):
+- Muerte de Conyuge (60) -> Bodas de Oro (70) [IMPOSIBLE]
+- Bancarrota (45) -> Compra de Mansion (50) [INCOHERENTE]
+
+Ejemplo de BUENA coherencia:
+- Matrimonio (28) -> Nacimiento Hijo (32) -> Boda de Hijo (58)
+- Divorcio (40) -> Soledad (45) -> Nuevo Amor (52)
+- Bancarrota (45) -> Trabajo Humilde (48) -> Recuperacion Lenta (55)
+
+Responde SOLO con el JSON array.`;
 
   return { systemPrompt, userPrompt };
 }
