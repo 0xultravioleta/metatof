@@ -18,9 +18,10 @@ export class LifeLine {
         const segments = 200;
 
         // Crear 3 caminos visuales (Alta, Media, Baja Conciencia)
-        this.highPath = this.createPath(length, segments, 1, 0x00ff00); // Verde
+        // Colores Espectrales: Ultravioleta (Luz) vs Terracota (Tierra/Denso)
+        this.highPath = this.createPath(length, segments, 1, 0x9900ff); // Ultravioleta
         this.neutralPath = this.createPath(length, segments, 0, 0xffffff); // Blanco/Gris
-        this.lowPath = this.createPath(length, segments, -1, 0xff0000); // Rojo
+        this.lowPath = this.createPath(length, segments, -1, 0xcc4400); // Terracota
     }
 
     createPath(length, segments, type, colorHex) {

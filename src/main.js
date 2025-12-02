@@ -129,7 +129,8 @@ function animate(timestamp = 0) {
 
   // Actualizar UI
   consValSpan.innerText = consciousness.toFixed(2);
-  consValSpan.style.color = consciousness > 0 ? '#ffff00' : (consciousness < 0 ? '#ff0000' : '#ffffff');
+  // Colores Espectrales: Ultravioleta vs Terracota
+  consValSpan.style.color = consciousness > 0 ? '#9900ff' : (consciousness < 0 ? '#cc4400' : '#ffffff');
 
   // Mover cámara a lo largo de la línea
   progress += speed;
