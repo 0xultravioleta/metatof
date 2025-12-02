@@ -23,8 +23,8 @@ export class LifeLine {
 
         // 2. Camino Vesica (Neutral) - Standard pero muy sutil
         this.neutralPath = this.createPath(length, segments, 0, 0xffffff, 'standard');
-        this.neutralPath.material.opacity = 0.1; // Muy transparente
-        this.neutralPath.material.emissiveIntensity = 0.2; // Poco brillo
+        this.neutralPath.material.opacity = 0.3; // Más visible (antes 0.1)
+        this.neutralPath.material.emissiveIntensity = 0.5; // Más brillo (antes 0.2)
 
         // 3. Camino Sombra (Low) - Standard Material (Mejor integración con Bloom)
         // Usamos depthTest false para que se vea siempre (X-Ray) pero con shading bonito
@@ -36,20 +36,33 @@ export class LifeLine {
     }
 
     createPath(length, segments, type, colorHex, matType) {
-        const points = [];
-        for (let i = 0; i <= segments; i++) {
-            const t = i / segments;
-            const z = -t * length;
+        let points = [];
 
-            let y = 0;
-            if (type === 1) {
-                y = Math.sin(t * Math.PI) * 2 + t * 10;
-            } else if (type === -1) {
-                y = -Math.sin(t * Math.PI) * 2 - t * 10;
-            } else {
-                y = 0;
-            }
-            points.push(new THREE.Vector3(0, y, z));
+        if (type === 1) {
+            // High Path (Sefirot Central Column): Maljut(2) -> Yesod(4) -> Tiferet(8) -> Keter(14)
+            // Distribuimos los puntos a lo largo de Z
+            points = [
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, 2, -length * 0.2),
+                new THREE.Vector3(0, 4, -length * 0.4),
+                new THREE.Vector3(0, 8, -length * 0.7),
+                new THREE.Vector3(0, 14, -length)
+            ];
+        } else if (type === -1) {
+            // Low Path (Qliphoth Central Column): Lilith(-2) -> Gamaliel(-4) -> Thagirion(-8) -> Thaumiel(-14)
+            points = [
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, -2, -length * 0.2),
+                new THREE.Vector3(0, -4, -length * 0.4),
+                new THREE.Vector3(0, -8, -length * 0.7),
+                new THREE.Vector3(0, -14, -length)
+            ];
+        } else {
+            // Neutral Path (Straight)
+            points = [
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, 0, -length)
+            ];
         }
 
         const curve = new THREE.CatmullRomCurve3(points);
@@ -101,19 +114,19 @@ export class LifeLine {
         this.lowPath.mesh.visible = false;
         this.neutralPath.mesh.visible = false;
 
-        if (Math.abs(consciousness) < 0.15) {
+        if (Math.abs(consciousness) < 0.05) {
             // --- ZONA VESICA ---
             this.neutralPath.mesh.visible = true;
-            this.neutralPath.material.opacity = 0.1; // Mantener sutil
-            this.neutralPath.material.emissiveIntensity = 0.2;
+            this.neutralPath.material.opacity = 0.3; // Más visible
+            this.neutralPath.material.emissiveIntensity = 0.5;
         } else if (consciousness > 0) {
             // --- ZONA LUZ ---
             this.highPath.mesh.visible = true;
-            this.highPath.material.emissiveIntensity = 1.5; // Brillo reducido
+            this.highPath.material.emissiveIntensity = 1.2; // Brillo reducido (antes 1.5)
         } else {
             // --- ZONA SOMBRA ---
             this.lowPath.mesh.visible = true;
-            this.lowPath.material.emissiveIntensity = 3.0;
+            this.lowPath.material.emissiveIntensity = 2.0; // Brillo reducido (antes 3.0)
             this.lowPath.material.emissive.setHex(0xffaa00);
         }
     }

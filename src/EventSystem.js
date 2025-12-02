@@ -1,65 +1,150 @@
 import * as THREE from 'three';
 
-export const EVENTS_DATA = [
-    { t: 0.02, name: "Nacimiento", age: 0, weight: 1.0 },
-    { t: 0.05, name: "Primera Infancia", age: 3, weight: 0.5 },
-    { t: 0.08, name: "Escuela / Socialización", age: 5, weight: 0.5 },
-    { t: 0.11, name: "Primeras Amistades", age: 8, weight: 0.6 },
-    { t: 0.14, name: "Primer Amor", age: 14, weight: 0.7 },
-    { t: 0.17, name: "Adolescencia", age: 15, weight: 0.8 },
-    { t: 0.20, name: "Graduación", age: 18, weight: 0.6 },
-    { t: 0.23, name: "Primer Empleo", age: 20, weight: 0.7 },
-    { t: 0.26, name: "Independencia", age: 23, weight: 0.8 },
-    { t: 0.29, name: "Mudanza / Cambio", age: 25, weight: 0.6 },
-    { t: 0.32, name: "Pareja Estable", age: 27, weight: 0.9 },
-    { t: 0.35, name: "Paternidad / Maternidad", age: 30, weight: 1.0 },
-    { t: 0.38, name: "Duelo / Pérdida", age: 32, weight: 1.0 },
-    { t: 0.41, name: "Crisis de Salud", age: 35, weight: 0.9 },
-    { t: 0.44, name: "Crisis Económica", age: 38, weight: 0.8 },
-    { t: 0.47, name: "Ruptura / Divorcio", age: 40, weight: 0.9 },
-    { t: 0.50, name: "Crisis Existencial", age: 42, weight: 0.7 },
-    { t: 0.53, name: "Cambio de Rumbo", age: 45, weight: 0.6 },
-    { t: 0.56, name: "Éxito / Logros", age: 48, weight: 0.8 },
-    { t: 0.59, name: "Trauma / Golpe", age: 50, weight: 1.0 },
-    { t: 0.62, name: "Migración / Entorno", age: 52, weight: 0.7 },
-    { t: 0.65, name: "Crisis Mediana Edad", age: 55, weight: 0.8 },
-    { t: 0.68, name: "Jubilación / Retiro", age: 65, weight: 0.7 },
-    { t: 0.71, name: "Redefinición Identidad", age: 67, weight: 0.9 },
-    { t: 0.74, name: "Conexión Profunda", age: 70, weight: 0.9 },
-    { t: 0.77, name: "Misión de Vida", age: 72, weight: 1.0 },
-    { t: 0.80, name: "Decepción / Caída", age: 75, weight: 0.8 },
-    { t: 0.83, name: "Búsqueda Espiritual", age: 78, weight: 0.9 },
-    { t: 0.86, name: "Cambio de Círculo", age: 80, weight: 0.6 },
-    { t: 0.89, name: "Despertar Conciencia", age: 82, weight: 0.8 },
-    { t: 0.92, name: "Evento Externo", age: 85, weight: 1.0 },
-    { t: 0.95, name: "Vocación Real", age: 88, weight: 0.9 },
-    { t: 0.97, name: "Mentores / Guías", age: 90, weight: 0.8 },
-    { t: 0.99, name: "Muerte / Transición", age: 99, weight: 1.0 }
-];
+// Banco de Eventos (Pool) - Hechos Concretos y Predestinados
+const EVENT_POOL = {
+    universal: [
+        { t: 0.00, name: "Nacimiento", age: 0 },
+        { t: 0.18, name: "Mayoría de Edad", age: 18 },
+        { t: 0.99, name: "Muerte Física", age: 99 }
+    ],
+    standard: [
+        { t: 0.04, name: "Primeros Pasos", age: 4 },
+        { t: 0.06, name: "Primer Día de Escuela", age: 6 },
+        { t: 0.10, name: "Mejor Amigo/a", age: 10 },
+        { t: 0.14, name: "Primer Beso", age: 14 },
+        { t: 0.16, name: "Licencia de Conducir", age: 16 },
+        { t: 0.22, name: "Graduación Universitaria", age: 22 },
+        { t: 0.24, name: "Viaje al Extranjero", age: 24 },
+        { t: 0.25, name: "Primer Empleo Real", age: 25 },
+        { t: 0.27, name: "Mudanza Independiente", age: 27 },
+        { t: 0.28, name: "Boda / Matrimonio", age: 28 },
+        { t: 0.30, name: "Ascenso Laboral", age: 30 },
+        { t: 0.32, name: "Compra de Casa", age: 32 },
+        { t: 0.35, name: "Nacimiento Primer Hijo", age: 35 },
+        { t: 0.38, name: "Nacimiento Segundo Hijo", age: 38 },
+        { t: 0.45, name: "Crisis de Mediana Edad", age: 45 },
+        { t: 0.52, name: "Boda de Hijo/a", age: 52 },
+        { t: 0.60, name: "Retiro Parcial", age: 60 },
+        { t: 0.65, name: "Fiesta de Jubilación", age: 65 },
+        { t: 0.70, name: "Bodas de Oro", age: 70 },
+        { t: 0.75, name: "Nacimiento Primer Nieto", age: 75 }
+    ],
+    karmic: [ // Pruebas Duras / "Mal Karma"
+        { t: 0.08, name: "Accidente Doméstico", age: 8 },
+        { t: 0.12, name: "Bullying Escolar Severo", age: 12 },
+        { t: 0.15, name: "Suspensión Escolar", age: 15 },
+        { t: 0.20, name: "Accidente de Auto", age: 20 },
+        { t: 0.23, name: "Ruptura Amorosa Dolorosa", age: 23 },
+        { t: 0.26, name: "Deuda Inesperada", age: 26 },
+        { t: 0.30, name: "Despido Fulminante", age: 30 },
+        { t: 0.34, name: "Traición de Socio", age: 34 },
+        { t: 0.38, name: "Divorcio Conflictivo", age: 38 },
+        { t: 0.42, name: "Bancarrota Total", age: 42 },
+        { t: 0.48, name: "Diagnóstico de Cáncer", age: 48 },
+        { t: 0.55, name: "Incendio del Hogar", age: 55 },
+        { t: 0.60, name: "Muerte de Cónyuge", age: 60 },
+        { t: 0.68, name: "Estafa Financiera", age: 68 },
+        { t: 0.72, name: "Caída Grave", age: 72 },
+        { t: 0.80, name: "Demencia Senil", age: 80 },
+        { t: 0.88, name: "Soledad Absoluta", age: 88 }
+    ],
+    dharmic: [ // Regalos / "Buen Karma"
+        { t: 0.07, name: "Premio Escolar", age: 7 },
+        { t: 0.16, name: "Descubrimiento de Talento", age: 16 },
+        { t: 0.19, name: "Mentor Inspirador", age: 19 },
+        { t: 0.24, name: "Beca Prestigiosa", age: 24 },
+        { t: 0.29, name: "Oportunidad de Negocio", age: 29 },
+        { t: 0.33, name: "Éxito Viral / Fama", age: 33 },
+        { t: 0.40, name: "Premio de Lotería", age: 40 },
+        { t: 0.46, name: "Obra Maestra Creada", age: 46 },
+        { t: 0.50, name: "Curación Milagrosa", age: 50 },
+        { t: 0.58, name: "Herencia Inesperada", age: 58 },
+        { t: 0.62, name: "Reencuentro Emotivo", age: 62 },
+        { t: 0.70, name: "Reconocimiento Mundial", age: 70 },
+        { t: 0.78, name: "Bisnieto Conocido", age: 78 },
+        { t: 0.85, name: "Lucidez Extraordinaria", age: 85 },
+        { t: 0.92, name: "Paz Espiritual Profunda", age: 92 }
+    ]
+};
 
 export class EventSystem {
-    constructor(scene, uiElement) {
+    constructor(scene) {
         this.scene = scene;
-        this.uiElement = uiElement; // Elemento DOM para mostrar mensajes
-        this.events = EVENTS_DATA.map(e => ({ ...e, triggered: false }));
+        this.activeEvents = []; // Eventos de la vida actual
         this.lastProgress = 0;
-
-        // Grupo para efectos visuales temporales
         this.effectGroup = new THREE.Group();
         this.scene.add(this.effectGroup);
+        this.activeEffects = [];
+        this.onEvent = null;
 
-        this.onEvent = null; // Callback para minimapa u otros
+        // Iniciar primera vida (Karma Neutro)
+        this.generateLifeEvents(0);
+    }
+
+    generateLifeEvents(prevKarma) {
+        // 1. Siempre incluir Universales
+        let newEvents = [...EVENT_POOL.universal];
+
+        // 2. Configuración de Generación
+        const targetEventCount = 25; // Aumentado para "meter los que más puedas"
+        const minSpacing = 0.03; // Reducido a 3% (aprox 3 años) para permitir más densidad sin overlap excesivo
+
+        // Intentos de generación
+        for (let i = 0; i < 100; i++) { // Loop de seguridad aumentado
+            if (newEvents.length >= targetEventCount) break;
+
+            const r = Math.random();
+            let type = 'standard';
+
+            // Lógica de Karma (Probabilidades)
+            if (prevKarma < -0.2) {
+                // Vida previa en sombra -> Más pruebas
+                if (r < 0.5) type = 'karmic';
+                else if (r < 0.8) type = 'standard';
+                else type = 'dharmic';
+            } else if (prevKarma > 0.2) {
+                // Vida previa en luz -> Más regalos
+                if (r < 0.5) type = 'dharmic';
+                else if (r < 0.8) type = 'standard';
+                else type = 'karmic';
+            } else {
+                // Neutro
+                if (r < 0.3) type = 'karmic';
+                else if (r < 0.6) type = 'dharmic';
+                else type = 'standard';
+            }
+
+            // Seleccionar evento candidato
+            const pool = EVENT_POOL[type];
+            const candidate = pool[Math.floor(Math.random() * pool.length)];
+
+            // Validaciones Estrictas
+            // 1. No duplicados
+            const isDuplicate = newEvents.some(e => e.name === candidate.name);
+
+            // 2. Espaciado Visual (Overlap Check)
+            const isTooClose = newEvents.some(e => Math.abs(e.t - candidate.t) < minSpacing);
+
+            if (!isDuplicate && !isTooClose) {
+                newEvents.push({ ...candidate, triggered: false });
+            }
+        }
+
+        // Ordenar por tiempo
+        newEvents.sort((a, b) => a.t - b.t);
+        this.activeEvents = newEvents;
+
+        console.log("Nueva Vida Generada. Karma:", prevKarma.toFixed(2));
+        console.log("Eventos:", this.activeEvents.map(e => `${e.name} (${e.age})`));
     }
 
     checkEvents(progress, consciousness) {
-        // Detectar cruce de eventos
-        // Asumimos avance positivo
         if (progress < this.lastProgress) {
-            // Reset al reiniciar loop
-            this.events.forEach(e => e.triggered = false);
+            // Reset loop detectado externamente, pero aquí solo reseteamos triggers
+            this.activeEvents.forEach(e => e.triggered = false);
         }
 
-        this.events.forEach(event => {
+        this.activeEvents.forEach(event => {
             if (!event.triggered && progress >= event.t && this.lastProgress < event.t) {
                 this.triggerEvent(event, consciousness);
                 event.triggered = true;
@@ -67,46 +152,37 @@ export class EventSystem {
         });
 
         this.lastProgress = progress;
-
-        // Actualizar efectos activos
         this.updateEffects();
     }
 
     triggerEvent(event, consciousness) {
-        console.log(`Evento disparado: ${event.name} (Conciencia: ${consciousness.toFixed(2)})`);
-
         let message = "";
         let color = "";
 
         if (consciousness > 0.3) {
-            // Alta Conciencia
-            message = `✨ ${event.name}: Transmutado en Luz`;
+            message = `✨ ${event.name}: Transmutado`;
             color = "#ffff00";
             this.createLightEffect();
         } else if (consciousness < -0.3) {
-            // Baja Conciencia
-            message = `💀 ${event.name}: Caída en Sombra`;
+            message = `💀 ${event.name}: Caída`;
             color = "#ff0000";
             this.createShadowEffect();
         } else {
-            // Neutro
-            message = `⚖️ ${event.name}: Experiencia Equilibrada`;
+            message = `⚖️ ${event.name}: Vivido`;
             color = "#ffffff";
-            this.createNeutralEffect();
             this.createNeutralEffect();
         }
 
-        // Notificar listeners (Minimapa)
         if (this.onEvent) {
             this.onEvent({
                 name: event.name,
                 t: event.t,
                 consciousness: consciousness,
-                color: color
+                color: color,
+                age: event.age
             });
         }
 
-        // Mostrar en UI
         this.showToast(message, color);
     }
 
@@ -114,70 +190,46 @@ export class EventSystem {
         const toast = document.createElement('div');
         toast.innerText = message;
         toast.style.color = color;
-        toast.style.fontSize = '24px';
+        toast.style.fontSize = '20px';
         toast.style.fontWeight = 'bold';
-        toast.style.textShadow = '0 0 10px ' + color;
+        toast.style.textShadow = '0 0 5px ' + color;
         toast.style.marginTop = '10px';
         toast.style.opacity = '1';
         toast.style.transition = 'opacity 2s';
 
-        // Añadir al contenedor UI (asumimos que uiElement es un contenedor)
-        // Si uiElement es solo un span, mejor añadimos al body o a un contenedor específico
-        const container = document.getElementById('event-container');
+        const container = document.getElementById('main-ui'); // Usar main-ui
         if (container) {
             container.appendChild(toast);
-            // Fade out
             setTimeout(() => {
                 toast.style.opacity = '0';
-                setTimeout(() => container.removeChild(toast), 2000);
+                setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 2000);
             }, 3000);
         }
     }
 
     createLightEffect() {
-        // Explosión de partículas doradas
-        const geometry = new THREE.SphereGeometry(0.1, 8, 8);
-        const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-
-        for (let i = 0; i < 20; i++) {
-            const mesh = new THREE.Mesh(geometry, material);
-            // Posición relativa a la cámara o al centro... 
-            // Simplificación: Efecto en el origen (0,0,0) o frente a la cámara?
-            // Mejor: Efecto "pantalla" o ambiental.
-            // Por ahora, solo un flash ambiental
-        }
-        // Flash de luz ambiental
         const flash = new THREE.PointLight(0xffff00, 5, 50);
         this.effectGroup.add(flash);
-
-        // Animar y remover
-        const anim = { light: flash, age: 0 };
-        this.activeEffects.push(anim);
+        this.activeEffects.push({ light: flash, age: 0 });
     }
 
     createShadowEffect() {
-        // Flash rojo/oscuro
         const flash = new THREE.PointLight(0xff0000, 5, 50);
         this.effectGroup.add(flash);
-        const anim = { light: flash, age: 0 };
-        this.activeEffects.push(anim);
+        this.activeEffects.push({ light: flash, age: 0 });
     }
 
     createNeutralEffect() {
         const flash = new THREE.PointLight(0xffffff, 2, 50);
         this.effectGroup.add(flash);
-        const anim = { light: flash, age: 0 };
-        this.activeEffects.push(anim);
+        this.activeEffects.push({ light: flash, age: 0 });
     }
 
     updateEffects() {
-        if (!this.activeEffects) this.activeEffects = [];
-
         for (let i = this.activeEffects.length - 1; i >= 0; i--) {
             const effect = this.activeEffects[i];
             effect.age += 0.05;
-            effect.light.intensity = Math.max(0, 5 - effect.age * 5); // Fade out rápido
-
+            effect.light.intensity = Math.max(0, 5 - effect.age * 5);
             if (effect.age > 1) {
                 this.effectGroup.remove(effect.light);
                 this.activeEffects.splice(i, 1);
