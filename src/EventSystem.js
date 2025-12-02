@@ -1,12 +1,40 @@
 import * as THREE from 'three';
 
 export const EVENTS_DATA = [
-    { t: 0.1, name: "Nacimiento / Origen", weight: 1.0 },
-    { t: 0.25, name: "Primer Desafío", weight: 0.5 },
-    { t: 0.4, name: "Encuentro Amoroso / Unión", weight: 0.8 },
-    { t: 0.6, name: "Pérdida / Crisis", weight: 1.0 },
-    { t: 0.75, name: "Revelación / Insight", weight: 0.7 },
-    { t: 0.9, name: "Trascendencia Final", weight: 1.0 }
+    { t: 0.02, name: "Nacimiento", weight: 1.0 },
+    { t: 0.05, name: "Primera Infancia", weight: 0.5 },
+    { t: 0.08, name: "Escuela / Socialización", weight: 0.5 },
+    { t: 0.11, name: "Primeras Amistades", weight: 0.6 },
+    { t: 0.14, name: "Primer Amor", weight: 0.7 },
+    { t: 0.17, name: "Adolescencia", weight: 0.8 },
+    { t: 0.20, name: "Graduación", weight: 0.6 },
+    { t: 0.23, name: "Primer Empleo", weight: 0.7 },
+    { t: 0.26, name: "Independencia", weight: 0.8 },
+    { t: 0.29, name: "Mudanza / Cambio", weight: 0.6 },
+    { t: 0.32, name: "Pareja Estable", weight: 0.9 },
+    { t: 0.35, name: "Paternidad / Maternidad", weight: 1.0 },
+    { t: 0.38, name: "Duelo / Pérdida", weight: 1.0 },
+    { t: 0.41, name: "Crisis de Salud", weight: 0.9 },
+    { t: 0.44, name: "Crisis Económica", weight: 0.8 },
+    { t: 0.47, name: "Ruptura / Divorcio", weight: 0.9 },
+    { t: 0.50, name: "Crisis Existencial", weight: 0.7 },
+    { t: 0.53, name: "Cambio de Rumbo", weight: 0.6 },
+    { t: 0.56, name: "Éxito / Logros", weight: 0.8 },
+    { t: 0.59, name: "Trauma / Golpe", weight: 1.0 },
+    { t: 0.62, name: "Migración / Entorno", weight: 0.7 },
+    { t: 0.65, name: "Crisis Mediana Edad", weight: 0.8 },
+    { t: 0.68, name: "Jubilación / Retiro", weight: 0.7 },
+    { t: 0.71, name: "Redefinición Identidad", weight: 0.9 },
+    { t: 0.74, name: "Conexión Profunda", weight: 0.9 },
+    { t: 0.77, name: "Misión de Vida", weight: 1.0 },
+    { t: 0.80, name: "Decepción / Caída", weight: 0.8 },
+    { t: 0.83, name: "Búsqueda Espiritual", weight: 0.9 },
+    { t: 0.86, name: "Cambio de Círculo", weight: 0.6 },
+    { t: 0.89, name: "Despertar Conciencia", weight: 0.8 },
+    { t: 0.92, name: "Evento Externo", weight: 1.0 },
+    { t: 0.95, name: "Vocación Real", weight: 0.9 },
+    { t: 0.97, name: "Mentores / Guías", weight: 0.8 },
+    { t: 0.99, name: "Muerte / Transición", weight: 1.0 }
 ];
 
 export class EventSystem {

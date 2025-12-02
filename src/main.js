@@ -83,7 +83,7 @@ function updateDimensionUI(consciousness) {
 // Variables de estado
 let time = 0;
 let progress = 0; // Progreso a lo largo de la línea de vida (0 a 1)
-const speed = 0.0005; // Velocidad de avance
+const speed = 0.0001; // Velocidad reducida (antes 0.0005) para navegación lenta
 
 // UI Overlay
 const uiDiv = document.createElement('div');
