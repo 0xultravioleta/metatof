@@ -6,9 +6,14 @@ import { ConsciousnessController } from './ConsciousnessController.js';
 import { EventSystem } from './EventSystem.js';
 import { GalaxyBackground } from './GalaxyBackground.js';
 import { Minimap } from './Minimap.js';
+import { LifeStoryCollector } from './LifeStoryCollector.js';
+import { StoryPanel } from './StoryPanel.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+
+// API Configuration - Update this after deploying infrastructure
+const LIFE_STORY_API_ENDPOINT = import.meta.env.VITE_LIFE_STORY_API || '';
 
 // Configuración básica
 const scene = new THREE.Scene();
@@ -53,9 +58,25 @@ const consciousnessController = new ConsciousnessController();
 const eventSystem = new EventSystem(scene);
 const minimap = new Minimap();
 
-// Conectar EventSystem con Minimapa
+// Life Story Generation
+const storyCollector = new LifeStoryCollector(LIFE_STORY_API_ENDPOINT);
+const storyPanel = new StoryPanel();
+
+// Callbacks for story generation
+storyCollector.onStoryGenerated = (result) => {
+  console.log("Story generated successfully");
+  storyPanel.displayStory(result);
+};
+
+storyCollector.onError = (error) => {
+  console.error("Story generation error:", error);
+  storyPanel.showError(error.message);
+};
+
+// Conectar EventSystem con Minimapa y StoryCollector
 eventSystem.onEvent = (data) => {
   minimap.registerEvent(data);
+  storyCollector.recordEvent(data);
 };
 
 // UI para Info de Dimensión
@@ -98,17 +119,54 @@ function updateDimensionUI(consciousness) {
 // Variables de estado
 let time = 0;
 let progress = 0; // Progreso a lo largo de la línea de vida (0 a 1)
-const speed = 0.0001; // Velocidad reducida (antes 0.0005) para navegación lenta
+const speed = 0.0002; // Velocidad aumentada un poco (antes 0.0001, orig 0.0005)
+let reincarnationEnabled = false; // Control de loop
 
 // UI Overlay
 const uiDiv = document.createElement('div');
 uiDiv.id = 'main-ui'; // ID para CSS
 uiDiv.innerHTML = `
-    <h1>Árbol de la Vida</h1>
+    <h1>Arbol de la Vida</h1>
     <p>Conciencia: <span id="cons-val">0.0</span></p>
     <p class="desktop-hint">Teclado: ↑ Luz / ↓ Sombra</p>
+    <div style="margin-top: 10px;">
+        <label style="font-size: 0.9em; cursor: pointer;">
+            <input type="checkbox" id="reincarnation-toggle"> Reencarnacion (Loop)
+        </label>
+    </div>
 `;
 document.body.appendChild(uiDiv);
+
+// Story panel toggle button (shows when API is configured)
+if (LIFE_STORY_API_ENDPOINT) {
+  const storyToggleBtn = document.createElement('button');
+  storyToggleBtn.id = 'story-toggle';
+  storyToggleBtn.textContent = 'Historia';
+  storyToggleBtn.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 380px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    z-index: 150;
+    transition: all 0.2s;
+  `;
+  storyToggleBtn.onmouseenter = () => storyToggleBtn.style.background = 'rgba(153, 0, 255, 0.5)';
+  storyToggleBtn.onmouseleave = () => storyToggleBtn.style.background = 'rgba(0, 0, 0, 0.7)';
+  storyToggleBtn.onclick = () => storyPanel.toggle();
+  document.body.appendChild(storyToggleBtn);
+}
+
+// Event Listener para Reencarnación
+document.getElementById('reincarnation-toggle').addEventListener('change', (e) => {
+  reincarnationEnabled = e.target.checked;
+});
 
 // Controles Móviles (Botones)
 const controlsDiv = document.createElement('div');
@@ -155,8 +213,48 @@ function animate(timestamp = 0) {
   consValSpan.style.color = consciousness > 0 ? '#9900ff' : (consciousness < 0 ? '#cc4400' : '#ffffff');
 
   // Mover cámara a lo largo de la línea
-  progress += speed;
-  if (progress > 1) progress = 0;
+  if (progress < 1.0 || reincarnationEnabled) {
+    progress += speed;
+  }
+
+  // Record consciousness for story generation
+  storyCollector.record(progress, consciousness);
+
+  if (progress >= 1.0) {
+    if (reincarnationEnabled) {
+      // REENCARNACIÓN: Calcular Karma y generar nueva vida
+
+      // Generate story before resetting (if API is configured)
+      if (LIFE_STORY_API_ENDPOINT && !storyCollector.isGenerating) {
+        storyPanel.showLoading();
+        storyCollector.generateStory();
+      }
+
+      // Calcular promedio de conciencia de la vida pasada usando el historial del minimapa
+      let avgConsciousness = 0;
+      if (minimap.history.length > 0) {
+        const sum = minimap.history.reduce((acc, curr) => acc + curr.c, 0);
+        avgConsciousness = sum / minimap.history.length;
+      } else {
+        avgConsciousness = consciousness; // Fallback
+      }
+
+      progress = 0;
+      eventSystem.generateLifeEvents(avgConsciousness);
+
+      minimap.history = []; // Limpiar rastro de vida anterior
+      minimap.pastEvents = [];
+      storyCollector.reset(); // Reset collector for new life
+    } else {
+      progress = 1.0; // Detener al final
+
+      // Generate story when life ends (one-time, no reincarnation)
+      if (LIFE_STORY_API_ENDPOINT && !storyCollector.isGenerating && storyCollector.history.length > 50) {
+        storyPanel.showLoading();
+        storyCollector.generateStory();
+      }
+    }
+  }
 
   // Posición base en la línea
   const position = lifeLine.getPointAt(progress, consciousness);
@@ -175,21 +273,39 @@ function animate(timestamp = 0) {
 
   // Orientar el árbol hacia adelante (SOLO ROTACIÓN Y)
   // Evitamos lookAt completo para que no se incline (pitch/roll) y parezca "skewed"
-  const lookAtPos = lifeLine.getPointAt(Math.min(1, progress + 0.01), consciousness);
-  const direction = new THREE.Vector3().subVectors(lookAtPos, position).normalize();
-  const angleY = Math.atan2(direction.x, direction.z);
+  // Si estamos parados al final (progress=1), lookAtPos puede fallar si no manejamos el límite
+  const lookAtT = Math.min(1, progress + 0.01);
+  const lookAtPos = lifeLine.getPointAt(lookAtT, consciousness);
 
-  treeVessel.group.rotation.set(0, angleY, 0); // Solo rotación Y, árbol vertical
+  // Si estamos al final exacto, usar la tangente anterior o mantener rotación
+  if (progress < 1.0) {
+    const direction = new THREE.Vector3().subVectors(lookAtPos, position).normalize();
+    const angleY = Math.atan2(direction.x, direction.z);
+    treeVessel.group.rotation.set(0, angleY, 0);
+  }
 
   // Rotación X eliminada ("no tiene por que rotar")
   // treeVessel.group.rotation.x = Math.sin(seconds) * 0.1;
 
   // Cámara en 1ra/3ra persona
-  const camPos = position.clone();
-  camPos.y += 3; // Un poco más arriba
-  camPos.z += 25; // MUCHO más atrás (Zoom out solicitado)
+  // Cámara dinámica según conciencia
+  let camY = 3;
+  let camZ = 25;
+  let backDist = 15;
 
-  const backOffset = tangent.clone().multiplyScalar(-15); // Más distancia hacia atrás en la curva
+  if (consciousness < 0) {
+    // En la sombra (abajo), alejarse más para ver la estructura completa y la caída
+    const factor = Math.abs(consciousness); // 0 a 1
+    camY += factor * 10; // Subir más (hasta +13) para ver desde arriba
+    camZ += factor * 30; // Alejar mucho más (hasta +55) para perspectiva amplia
+    backDist += factor * 15; // Alejarse en la tangente (hasta 30)
+  }
+
+  const camPos = position.clone();
+  camPos.y += camY;
+  camPos.z += camZ;
+
+  const backOffset = tangent.clone().multiplyScalar(-backDist);
   camPos.add(backOffset);
 
   camera.position.lerp(camPos, 0.1);
@@ -200,7 +316,9 @@ function animate(timestamp = 0) {
   treeVessel.update(seconds, consciousness);
   lifeLine.update(consciousness);
   eventSystem.checkEvents(progress, consciousness);
-  minimap.update(progress, consciousness);
+
+  // Pasar los eventos activos al minimapa para dibujar solo los de esta vida
+  minimap.update(progress, consciousness, eventSystem.activeEvents);
 
   updateDimensionUI(consciousness);
 
