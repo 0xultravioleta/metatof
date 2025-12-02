@@ -6,6 +6,7 @@ export class StoryPanel {
         this.panel = null;
         this.content = null;
         this.isVisible = false;
+        this.hasStory = false; // Track if a story is currently displayed
         this.init();
     }
 
@@ -138,6 +139,11 @@ export class StoryPanel {
     }
 
     showLoading() {
+        // Don't overwrite a story that was just displayed (give user 10 seconds to read)
+        if (this.hasStory && this.storyDisplayedAt && (Date.now() - this.storyDisplayedAt) < 10000) {
+            return;
+        }
+        this.hasStory = false;
         this.content.innerHTML = '';
         this.content.appendChild(this.loadingIndicator.cloneNode(true));
         this.show();
@@ -153,6 +159,7 @@ export class StoryPanel {
     }
 
     displayStory(storyData) {
+        console.log("displayStory called with:", storyData);
         const { story, karma, provider, timestamp } = storyData;
 
         // Format the story with proper paragraphs
@@ -188,10 +195,13 @@ export class StoryPanel {
         `;
 
         this.content.innerHTML = html;
+        this.hasStory = true;
+        this.storyDisplayedAt = Date.now();
         this.show();
     }
 
     clear() {
+        this.hasStory = false;
         this.content.innerHTML = `
             <div style="text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.5);">
                 <div style="font-size: 13px;">Vive tu vida...</div>

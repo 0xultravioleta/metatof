@@ -190,59 +190,190 @@ async function callOpenAI(systemPrompt, userPrompt, apiKey) {
   return data.choices[0].message.content;
 }
 
+// Event generation prompt
+function buildEventGenerationPrompt(karma) {
+  const systemPrompt = `Eres un disenador de destinos. Tu trabajo es crear los eventos que marcaran una vida humana.
+
+Cada vida tiene:
+- Eventos universales (nacimiento, mayoria de edad, muerte)
+- Eventos estandar (hitos normales de la vida)
+- Eventos karmicos (pruebas y desafios)
+- Eventos dharmicos (bendiciones y regalos)
+
+El karma de la vida anterior determina la proporcion:
+- Karma negativo (< -0.2): Mas pruebas duras, menos regalos
+- Karma positivo (> 0.2): Mas bendiciones, menos pruebas
+- Karma neutro: Balance equilibrado
+
+REGLAS:
+- Genera exactamente 20-25 eventos (sin contar nacimiento y muerte)
+- Cada evento tiene: nombre corto (max 4 palabras), edad (0-99), tipo (standard/karmic/dharmic)
+- Los eventos deben ser REALISTAS y VARIADOS
+- No repitas eventos similares
+- Distribuye los eventos a lo largo de toda la vida
+- Los nombres deben ser en espanol, concretos y evocadores
+- Evita cliches - se creativo con las situaciones
+
+FORMATO DE RESPUESTA (JSON estricto):
+[
+  {"name": "Nombre del Evento", "age": 25, "type": "standard"},
+  ...
+]`;
+
+  const karmaDescription = karma < -0.2 ? "negativo (vida previa en sombra)" :
+                           karma > 0.2 ? "positivo (vida previa en luz)" :
+                           "neutro (vida previa equilibrada)";
+
+  const userPrompt = `Genera los eventos para una nueva vida. El karma heredado es ${karma.toFixed(2)} (${karmaDescription}).
+
+Crea una vida unica e interesante. Incluye:
+- Eventos de infancia y adolescencia
+- Relaciones (amigos, amor, familia)
+- Trabajo y logros profesionales
+- Crisis y superaciones
+- Momentos de alegria y de dolor
+- El final de la vida
+
+Responde SOLO con el JSON array, sin explicaciones.`;
+
+  return { systemPrompt, userPrompt };
+}
+
+async function generateLifeEvents(karma, apiKey, provider) {
+  const { systemPrompt, userPrompt } = buildEventGenerationPrompt(karma);
+
+  let response;
+  if (provider === "anthropic") {
+    response = await callAnthropic(systemPrompt, userPrompt, apiKey);
+  } else {
+    response = await callOpenAI(systemPrompt, userPrompt, apiKey);
+  }
+
+  // Parse JSON from response
+  try {
+    // Extract JSON array from response (handle markdown code blocks)
+    let jsonStr = response;
+    const jsonMatch = response.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      jsonStr = jsonMatch[0];
+    }
+    const events = JSON.parse(jsonStr);
+
+    // Add universal events and convert to expected format
+    const universalEvents = [
+      { t: 0.00, name: "Nacimiento", age: 0, type: "universal" },
+      { t: 0.18, name: "Mayoria de Edad", age: 18, type: "universal" },
+      { t: 0.99, name: "Muerte Fisica", age: 99, type: "universal" }
+    ];
+
+    const formattedEvents = events.map(e => ({
+      t: e.age / 100,
+      name: e.name,
+      age: e.age,
+      type: e.type
+    }));
+
+    // Combine and sort by age
+    const allEvents = [...universalEvents, ...formattedEvents];
+    allEvents.sort((a, b) => a.t - b.t);
+
+    return allEvents;
+  } catch (e) {
+    console.error("Failed to parse events JSON:", e, "Response:", response);
+    throw new Error("Failed to parse generated events");
+  }
+}
+
 export async function handler(event) {
   console.log("Event received:", JSON.stringify(event));
+
+  // Determine which endpoint was called
+  const path = event.rawPath || event.path || "";
+  const isEventGeneration = path.includes("generate-events");
 
   try {
     // Parse body
     const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
 
-    if (!body || !body.history || !body.events) {
-      return {
-        statusCode: 400,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ error: "Missing required fields: history, events" })
-      };
-    }
-
     // Get API keys
     const keys = await getApiKeys();
     const provider = process.env.LLM_PROVIDER || "anthropic";
 
-    // Build prompt
-    const { systemPrompt, userPrompt } = buildKabalaPrompt(body);
-
-    let story;
-
+    // Determine which API key to use
+    let apiKey;
+    let actualProvider;
     if (provider === "anthropic" && keys.anthropicKey) {
-      console.log("Using Anthropic Claude");
-      story = await callAnthropic(systemPrompt, userPrompt, keys.anthropicKey);
+      apiKey = keys.anthropicKey;
+      actualProvider = "anthropic";
     } else if (provider === "openai" && keys.openaiKey) {
-      console.log("Using OpenAI GPT-4");
-      story = await callOpenAI(systemPrompt, userPrompt, keys.openaiKey);
+      apiKey = keys.openaiKey;
+      actualProvider = "openai";
     } else if (keys.anthropicKey) {
-      console.log("Fallback to Anthropic");
-      story = await callAnthropic(systemPrompt, userPrompt, keys.anthropicKey);
+      apiKey = keys.anthropicKey;
+      actualProvider = "anthropic";
     } else if (keys.openaiKey) {
-      console.log("Fallback to OpenAI");
-      story = await callOpenAI(systemPrompt, userPrompt, keys.openaiKey);
+      apiKey = keys.openaiKey;
+      actualProvider = "openai";
     } else {
       throw new Error("No API keys configured");
     }
 
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*"
-      },
-      body: JSON.stringify({
-        story,
-        provider: provider,
-        karma: body.karma,
-        timestamp: new Date().toISOString()
-      })
-    };
+    console.log(`Using provider: ${actualProvider}, endpoint: ${isEventGeneration ? 'generate-events' : 'generate-story'}`);
+
+    // Route to appropriate handler
+    if (isEventGeneration) {
+      // EVENT GENERATION ENDPOINT
+      const karma = body?.karma ?? 0;
+      console.log("Generating life events for karma:", karma);
+
+      const events = await generateLifeEvents(karma, apiKey, actualProvider);
+
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*"
+        },
+        body: JSON.stringify({
+          events,
+          karma,
+          provider: actualProvider,
+          timestamp: new Date().toISOString()
+        })
+      };
+    } else {
+      // STORY GENERATION ENDPOINT
+      if (!body || !body.history || !body.events) {
+        return {
+          statusCode: 400,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ error: "Missing required fields: history, events" })
+        };
+      }
+
+      const { systemPrompt, userPrompt } = buildKabalaPrompt(body);
+      let story;
+
+      if (actualProvider === "anthropic") {
+        story = await callAnthropic(systemPrompt, userPrompt, apiKey);
+      } else {
+        story = await callOpenAI(systemPrompt, userPrompt, apiKey);
+      }
+
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*"
+        },
+        body: JSON.stringify({
+          story,
+          provider: actualProvider,
+          karma: body.karma,
+          timestamp: new Date().toISOString()
+        })
+      };
+    }
 
   } catch (error) {
     console.error("Error:", error);

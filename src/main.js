@@ -3,7 +3,7 @@ import { TreeVessel } from './TreeVessel.js';
 import { LifeLine } from './LifeLine.js';
 import { VesicaPiscis } from './VesicaPiscis.js';
 import { ConsciousnessController } from './ConsciousnessController.js';
-import { EventSystem } from './EventSystem.js';
+import { EventSystem, setEventApiEndpoint } from './EventSystem.js';
 import { GalaxyBackground } from './GalaxyBackground.js';
 import { Minimap } from './Minimap.js';
 import { LifeStoryCollector } from './LifeStoryCollector.js';
@@ -14,6 +14,12 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 
 // API Configuration - Update this after deploying infrastructure
 const LIFE_STORY_API_ENDPOINT = import.meta.env.VITE_LIFE_STORY_API || '';
+const LIFE_EVENTS_API_ENDPOINT = import.meta.env.VITE_LIFE_EVENTS_API || '';
+
+// Configure event API endpoint
+if (LIFE_EVENTS_API_ENDPOINT) {
+    setEventApiEndpoint(LIFE_EVENTS_API_ENDPOINT);
+}
 
 // Configuración básica
 const scene = new THREE.Scene();
@@ -121,6 +127,8 @@ let time = 0;
 let progress = 0; // Progreso a lo largo de la línea de vida (0 a 1)
 const speed = 0.0002; // Velocidad aumentada un poco (antes 0.0001, orig 0.0005)
 let reincarnationEnabled = false; // Control de loop
+let waitingForBirth = false; // Waiting for user to click "Be Born"
+let lifeEnded = false; // Track if current life has ended
 
 // UI Overlay
 const uiDiv = document.createElement('div');
@@ -162,6 +170,74 @@ if (LIFE_STORY_API_ENDPOINT) {
   storyToggleBtn.onclick = () => storyPanel.toggle();
   document.body.appendChild(storyToggleBtn);
 }
+
+// "Be Born" button for reincarnation
+const beBornBtn = document.createElement('button');
+beBornBtn.id = 'be-born-btn';
+beBornBtn.textContent = 'NACER';
+beBornBtn.style.cssText = `
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #9900ff 0%, #ff6600 100%);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: #fff;
+  padding: 16px 48px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  z-index: 300;
+  display: none;
+  box-shadow: 0 0 40px rgba(153, 0, 255, 0.6), 0 0 80px rgba(255, 102, 0, 0.3);
+  transition: all 0.3s;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+`;
+beBornBtn.onmouseenter = () => {
+  beBornBtn.style.transform = 'translateX(-50%) scale(1.1)';
+  beBornBtn.style.boxShadow = '0 0 60px rgba(153, 0, 255, 0.8), 0 0 100px rgba(255, 102, 0, 0.5)';
+};
+beBornBtn.onmouseleave = () => {
+  beBornBtn.style.transform = 'translateX(-50%) scale(1)';
+  beBornBtn.style.boxShadow = '0 0 40px rgba(153, 0, 255, 0.6), 0 0 80px rgba(255, 102, 0, 0.3)';
+};
+document.body.appendChild(beBornBtn);
+
+// Function to start a new life
+async function startNewLife() {
+  beBornBtn.style.display = 'none';
+  beBornBtn.textContent = 'GENERANDO DESTINO...';
+  waitingForBirth = false;
+
+  // Calculate karma from previous life
+  let avgConsciousness = 0;
+  if (minimap.history.length > 0) {
+    const sum = minimap.history.reduce((acc, curr) => acc + curr.c, 0);
+    avgConsciousness = sum / minimap.history.length;
+  }
+
+  // Clear previous life data first
+  minimap.history = [];
+  minimap.pastEvents = [];
+  storyCollector.reset();
+
+  // Generate new life events (async with API fallback)
+  if (LIFE_EVENTS_API_ENDPOINT) {
+    await eventSystem.generateLifeEventsAsync(avgConsciousness);
+  } else {
+    eventSystem.generateLifeEvents(avgConsciousness);
+  }
+
+  // Reset button text and start new life
+  beBornBtn.textContent = 'NACER';
+  progress = 0;
+  lifeEnded = false;
+}
+
+beBornBtn.onclick = startNewLife;
 
 // Event Listener para Reencarnación
 document.getElementById('reincarnation-toggle').addEventListener('change', (e) => {
@@ -220,39 +296,23 @@ function animate(timestamp = 0) {
   // Record consciousness for story generation
   storyCollector.record(progress, consciousness);
 
-  if (progress >= 1.0) {
-    if (reincarnationEnabled) {
-      // REENCARNACIÓN: Calcular Karma y generar nueva vida
+  if (progress >= 1.0 && !lifeEnded) {
+    lifeEnded = true;
+    progress = 1.0;
 
-      // Generate story before resetting (if API is configured)
-      if (LIFE_STORY_API_ENDPOINT && !storyCollector.isGenerating) {
-        storyPanel.showLoading();
-        storyCollector.generateStory();
-      }
+    // Generate story when life ends (if API is configured)
+    if (LIFE_STORY_API_ENDPOINT && !storyCollector.isGenerating && storyCollector.history.length > 50) {
+      storyPanel.showLoading();
+      storyCollector.generateStory();
+    }
 
-      // Calcular promedio de conciencia de la vida pasada usando el historial del minimapa
-      let avgConsciousness = 0;
-      if (minimap.history.length > 0) {
-        const sum = minimap.history.reduce((acc, curr) => acc + curr.c, 0);
-        avgConsciousness = sum / minimap.history.length;
-      } else {
-        avgConsciousness = consciousness; // Fallback
-      }
-
-      progress = 0;
-      eventSystem.generateLifeEvents(avgConsciousness);
-
-      minimap.history = []; // Limpiar rastro de vida anterior
-      minimap.pastEvents = [];
-      storyCollector.reset(); // Reset collector for new life
-    } else {
-      progress = 1.0; // Detener al final
-
-      // Generate story when life ends (one-time, no reincarnation)
-      if (LIFE_STORY_API_ENDPOINT && !storyCollector.isGenerating && storyCollector.history.length > 50) {
-        storyPanel.showLoading();
-        storyCollector.generateStory();
-      }
+    // Show "Be Born" button if reincarnation is enabled
+    if (reincarnationEnabled && !waitingForBirth) {
+      waitingForBirth = true;
+      // Small delay to let the story panel appear first
+      setTimeout(() => {
+        beBornBtn.style.display = 'block';
+      }, 1000);
     }
   }
 

@@ -104,7 +104,8 @@ export class LifeStoryCollector {
             console.log("Generating story with data:", {
                 historyPoints: this.history.length,
                 events: this.events.length,
-                karma: karma.toFixed(2)
+                karma: karma.toFixed(2),
+                eventDetails: this.events // Mostrar los eventos completos
             });
 
             const response = await fetch(this.apiEndpoint, {

@@ -197,10 +197,17 @@ resource "aws_apigatewayv2_integration" "lambda_integration" {
   payload_format_version = "2.0"
 }
 
-# API Gateway Route
+# API Gateway Route - Story Generation
 resource "aws_apigatewayv2_route" "generate_story" {
   api_id    = aws_apigatewayv2_api.life_story_api.id
   route_key = "POST /generate-story"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
+}
+
+# API Gateway Route - Event Generation
+resource "aws_apigatewayv2_route" "generate_events" {
+  api_id    = aws_apigatewayv2_api.life_story_api.id
+  route_key = "POST /generate-events"
   target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
 }
 
@@ -226,8 +233,13 @@ resource "aws_lambda_permission" "api_gateway" {
 
 # Outputs
 output "api_endpoint" {
-  description = "API Gateway endpoint URL"
+  description = "API Gateway endpoint URL for story generation"
   value       = "${aws_apigatewayv2_api.life_story_api.api_endpoint}/generate-story"
+}
+
+output "events_api_endpoint" {
+  description = "API Gateway endpoint URL for event generation"
+  value       = "${aws_apigatewayv2_api.life_story_api.api_endpoint}/generate-events"
 }
 
 output "llm_secret_arn" {

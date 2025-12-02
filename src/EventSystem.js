@@ -1,6 +1,13 @@
 import * as THREE from 'three';
 
-// Banco de Eventos (Pool) - Hechos Concretos y Predestinados
+// API endpoint for event generation (set from environment)
+let EVENT_API_ENDPOINT = null;
+
+export function setEventApiEndpoint(endpoint) {
+    EVENT_API_ENDPOINT = endpoint;
+}
+
+// Fallback Event Pool (used when API is unavailable)
 const EVENT_POOL = {
     universal: [
         { t: 0.00, name: "Nacimiento", age: 0 },
@@ -82,6 +89,45 @@ export class EventSystem {
     }
 
     generateLifeEvents(prevKarma) {
+        // Use local fallback
+        this._generateLocalEvents(prevKarma);
+    }
+
+    // Async version that tries API first
+    async generateLifeEventsAsync(prevKarma) {
+        if (EVENT_API_ENDPOINT) {
+            try {
+                console.log("Fetching life events from API...");
+                const response = await fetch(EVENT_API_ENDPOINT, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ karma: prevKarma })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log("Events received from API:", result.events.length);
+
+                // Use API events
+                this.activeEvents = result.events.map(e => ({ ...e, triggered: false }));
+                this.activeEvents.sort((a, b) => a.t - b.t);
+
+                console.log("Nueva Vida (API). Karma:", prevKarma.toFixed(2));
+                console.log("Eventos:", this.activeEvents.map(e => `${e.name} (${e.age})`));
+                return;
+            } catch (error) {
+                console.warn("API event generation failed, using fallback:", error.message);
+            }
+        }
+
+        // Fallback to local generation
+        this._generateLocalEvents(prevKarma);
+    }
+
+    _generateLocalEvents(prevKarma) {
         // 1. Siempre incluir Universales
         let newEvents = [...EVENT_POOL.universal];
 
@@ -134,7 +180,7 @@ export class EventSystem {
         newEvents.sort((a, b) => a.t - b.t);
         this.activeEvents = newEvents;
 
-        console.log("Nueva Vida Generada. Karma:", prevKarma.toFixed(2));
+        console.log("Nueva Vida (Local). Karma:", prevKarma.toFixed(2));
         console.log("Eventos:", this.activeEvents.map(e => `${e.name} (${e.age})`));
     }
 
