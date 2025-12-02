@@ -5,6 +5,7 @@ import { VesicaPiscis } from './VesicaPiscis.js';
 import { ConsciousnessController } from './ConsciousnessController.js';
 import { EventSystem } from './EventSystem.js';
 import { GalaxyBackground } from './GalaxyBackground.js';
+import { Minimap } from './Minimap.js';
 
 // Configuración básica
 const scene = new THREE.Scene();
@@ -35,6 +36,12 @@ treeVessel.group.add(vesica.group);
 const lifeLine = new LifeLine(scene);
 const consciousnessController = new ConsciousnessController();
 const eventSystem = new EventSystem(scene);
+const minimap = new Minimap();
+
+// Conectar EventSystem con Minimapa
+eventSystem.onEvent = (data) => {
+  minimap.registerEvent(data);
+};
 
 // UI para Info de Dimensión
 const dimInfoDiv = document.createElement('div');
@@ -178,6 +185,7 @@ function animate(timestamp = 0) {
   treeVessel.update(seconds, consciousness);
   lifeLine.update(consciousness);
   eventSystem.checkEvents(progress, consciousness);
+  minimap.update(progress, consciousness);
 
   updateDimensionUI(consciousness);
 

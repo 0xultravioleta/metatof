@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const EVENTS_DATA = [
+export const EVENTS_DATA = [
     { t: 0.1, name: "Nacimiento / Origen", weight: 1.0 },
     { t: 0.25, name: "Primer Desafío", weight: 0.5 },
     { t: 0.4, name: "Encuentro Amoroso / Unión", weight: 0.8 },
@@ -19,6 +19,8 @@ export class EventSystem {
         // Grupo para efectos visuales temporales
         this.effectGroup = new THREE.Group();
         this.scene.add(this.effectGroup);
+
+        this.onEvent = null; // Callback para minimapa u otros
     }
 
     checkEvents(progress, consciousness) {
@@ -63,6 +65,17 @@ export class EventSystem {
             message = `⚖️ ${event.name}: Experiencia Equilibrada`;
             color = "#ffffff";
             this.createNeutralEffect();
+            this.createNeutralEffect();
+        }
+
+        // Notificar listeners (Minimapa)
+        if (this.onEvent) {
+            this.onEvent({
+                name: event.name,
+                t: event.t,
+                consciousness: consciousness,
+                color: color
+            });
         }
 
         // Mostrar en UI
