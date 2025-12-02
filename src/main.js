@@ -80,17 +80,42 @@ const speed = 0.0005; // Velocidad de avance
 
 // UI Overlay
 const uiDiv = document.createElement('div');
-uiDiv.style.position = 'absolute';
-uiDiv.style.top = '20px';
-uiDiv.style.left = '20px';
-uiDiv.style.color = 'white';
-uiDiv.style.fontFamily = 'monospace';
+uiDiv.id = 'main-ui'; // ID para CSS
 uiDiv.innerHTML = `
-    <h1>Árbol de la Vida - Nave de Conciencia</h1>
+    <h1>Árbol de la Vida</h1>
     <p>Conciencia: <span id="cons-val">0.0</span></p>
-    <p>Controles: Flecha Arriba (Luz) / Abajo (Sombra)</p>
+    <p class="desktop-hint">Teclado: ↑ Luz / ↓ Sombra</p>
 `;
 document.body.appendChild(uiDiv);
+
+// Controles Móviles (Botones)
+const controlsDiv = document.createElement('div');
+controlsDiv.className = 'controls-container';
+controlsDiv.innerHTML = `
+    <div class="control-btn" id="btn-up">▲</div>
+    <div class="control-btn" id="btn-down">▼</div>
+`;
+document.body.appendChild(controlsDiv);
+
+// Lógica de botones
+document.getElementById('btn-up').addEventListener('click', (e) => {
+  e.preventDefault();
+  consciousnessController.changeValue(0.1);
+});
+document.getElementById('btn-down').addEventListener('click', (e) => {
+  e.preventDefault();
+  consciousnessController.changeValue(-0.1);
+});
+// Prevenir doble disparo en touch devices si es necesario, pero click suele bastar.
+// Añadimos touchstart para respuesta más rápida
+document.getElementById('btn-up').addEventListener('touchstart', (e) => {
+  e.preventDefault(); // Evitar click fantasma
+  consciousnessController.changeValue(0.1);
+}, { passive: false });
+document.getElementById('btn-down').addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  consciousnessController.changeValue(-0.1);
+}, { passive: false });
 const consValSpan = document.getElementById('cons-val');
 
 // Loop de animación
@@ -138,9 +163,10 @@ function animate(timestamp = 0) {
 
   // Cámara en 1ra/3ra persona
   const camPos = position.clone();
-  camPos.y += 2;
-  camPos.z += 10;
-  const backOffset = tangent.clone().multiplyScalar(-8);
+  camPos.y += 3; // Un poco más arriba
+  camPos.z += 25; // MUCHO más atrás (Zoom out solicitado)
+
+  const backOffset = tangent.clone().multiplyScalar(-15); // Más distancia hacia atrás en la curva
   camPos.add(backOffset);
 
   camera.position.lerp(camPos, 0.1);

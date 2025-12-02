@@ -3,8 +3,103 @@ body {
     overflow: hidden;
     background-color: #000;
     font-family: sans-serif;
+    touch-action: none;
+    /* Prevenir zoom/scroll accidental en móvil */
 }
 
 canvas {
     display: block;
+}
+
+/* UI Principal (Título y Conciencia) */
+#main-ui {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: white;
+    font-family: monospace;
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* Info de Dimensión (Centro) */
+#dimension-info {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    text-shadow: 0 0 10px #000;
+    pointer-events: none;
+    width: 80%;
+    /* Evitar desbordamiento */
+    z-index: 10;
+}
+
+/* Botones de Control Móvil */
+.controls-container {
+    position: absolute;
+    bottom: 40px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    z-index: 20;
+}
+
+.control-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    transition: background 0.2s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.control-btn:active {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsive: Móvil */
+@media (max-width: 768px) {
+    #main-ui h1 {
+        font-size: 1.2em;
+        margin: 0 0 5px 0;
+    }
+
+    #main-ui p {
+        font-size: 0.9em;
+        margin: 2px 0;
+    }
+
+    #dimension-info {
+        top: 10px;
+        width: 90%;
+    }
+
+    #dimension-info h2 {
+        font-size: 1.5em !important;
+        /* Forzar override del inline style si es necesario */
+    }
+
+    #dimension-info p {
+        font-size: 1em !important;
+    }
+
+    /* Mover controles un poco más arriba/centro si es necesario */
+    .controls-container {
+        bottom: 30px;
+        right: 30px;
+    }
 }
