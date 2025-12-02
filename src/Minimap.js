@@ -26,14 +26,16 @@ export class Minimap {
 
         // Altura completa menos márgenes
         const height = window.innerHeight - 40;
-        const width = isMobile ? 120 : 200; // Más estrecho en móvil para no tapar tanto? O igual? Usuario dijo "mas alargada"
+        // Móvil: Franja lateral estrecha (100px) para no tapar el árbol
+        // Escritorio: 200px
+        const width = isMobile ? 100 : 200;
 
         this.canvas.width = width;
         this.canvas.height = height;
         this.canvas.style.top = '20px';
 
         if (isMobile) {
-            this.canvas.style.left = '20px';
+            this.canvas.style.left = '10px'; // Pegado a la izquierda
             this.canvas.style.right = 'auto';
         } else {
             this.canvas.style.right = '20px';
@@ -96,7 +98,7 @@ export class Minimap {
 
         // 2. Líneas de Eventos (Horizontales)
         const isMobile = window.innerWidth < 768;
-        const fontSize = isMobile ? '12px' : '10px'; // Fuente más grande en móvil
+        const fontSize = isMobile ? '10px' : '10px'; // Fuente pequeña en móvil para que quepa en 100px
 
         EVENTS_DATA.forEach(ev => {
             const y = h - (ev.t * h); // Invertir Y (0 abajo, 1 arriba)
@@ -112,9 +114,12 @@ export class Minimap {
             // Texto del evento
             ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.font = `${fontSize} Arial`;
-            // En móvil, si está a la izquierda, el texto quizás deba estar alineado diferente?
-            // Por defecto fillText dibuja desde la coordenada dada hacia la derecha.
             ctx.fillText(ev.name, 5, y - 2);
+
+            // Edad aproximada
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.font = `italic ${parseInt(fontSize) - 2}px Arial`;
+            ctx.fillText(`Age: ${ev.age}`, 5, y + 10);
         });
 
         // 3. Ruta Histórica con Gradiente Dinámico

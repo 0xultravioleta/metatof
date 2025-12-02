@@ -6,6 +6,9 @@ import { ConsciousnessController } from './ConsciousnessController.js';
 import { EventSystem } from './EventSystem.js';
 import { GalaxyBackground } from './GalaxyBackground.js';
 import { Minimap } from './Minimap.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 // Configuración básica
 const scene = new THREE.Scene();
@@ -20,6 +23,18 @@ document.body.appendChild(renderer.domElement);
 
 // Fondo de Galaxia (Nuevo Componente)
 const galaxy = new GalaxyBackground(scene);
+
+// Configuración de Post-Procesado (Bloom / Glow)
+const renderScene = new RenderPass(scene, camera);
+
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+bloomPass.threshold = 0; // Brillar todo lo que tenga luz
+bloomPass.strength = 2.5; // Intensidad del brillo (Very glowy)
+bloomPass.radius = 0.5; // Radio de dispersión
+
+const composer = new EffectComposer(renderer);
+composer.addPass(renderScene);
+composer.addPass(bloomPass);
 
 const ambientLight = new THREE.AmbientLight(0x404040);
 scene.add(ambientLight);
@@ -192,7 +207,8 @@ function animate(timestamp = 0) {
   // Animar fondo
   galaxy.update(seconds);
 
-  renderer.render(scene, camera);
+  // Renderizar con Bloom
+  composer.render();
 }
 
 requestAnimationFrame(animate);
@@ -201,4 +217,5 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
 });

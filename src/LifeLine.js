@@ -46,12 +46,18 @@ export class LifeLine {
         }
 
         const curve = new THREE.CatmullRomCurve3(points);
-        const geometry = new THREE.TubeGeometry(curve, segments, 0.1, 8, false);
-        const material = new THREE.MeshBasicMaterial({
-            color: colorHex,
+        // Aumentar radio para más presencia (0.1 -> 0.4)
+        const geometry = new THREE.TubeGeometry(curve, segments, 0.4, 8, false);
+
+        // Material Standard con Emisividad para Bloom
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x000000, // Base negra
+            emissive: colorHex, // El color viene de la emisión
+            emissiveIntensity: 2.0, // Intensidad alta para Bloom
             transparent: true,
-            opacity: 1.0, // Opaco para mejor visibilidad
-            wireframe: false
+            opacity: 1.0,
+            roughness: 0.4,
+            metalness: 0.6
         });
 
         const mesh = new THREE.Mesh(geometry, material);
