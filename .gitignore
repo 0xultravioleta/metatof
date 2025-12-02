@@ -5,3 +5,26 @@ dist
 
 .vercel
 .env*.local
+.env
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfstate.backup
+terraform/lambda.zip
+terraform/*.zip
+terraform/crash.log
+terraform/crash.*.log
+terraform/.terraform.tfstate.lock.info
+terraform/override.tf
+terraform/override.tf.json
+terraform/*_override.tf
+terraform/*_override.tf.json
+*.tfvars
+*.tfvars.json
+
+# Lambda build artifacts (dependencies should be installed on deploy)
+lambda/node_modules/
+lambda/package-lock.json
