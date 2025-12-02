@@ -29,7 +29,7 @@ const renderScene = new RenderPass(scene, camera);
 
 const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
 bloomPass.threshold = 0; // Brillar todo lo que tenga luz
-bloomPass.strength = 2.5; // Intensidad del brillo (Very glowy)
+bloomPass.strength = 1.5; // Intensidad reducida (antes 2.5) para no cansar la vista
 bloomPass.radius = 0.5; // Radio de dispersión
 
 const composer = new EffectComposer(renderer);

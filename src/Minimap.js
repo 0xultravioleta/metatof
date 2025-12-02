@@ -4,7 +4,7 @@ export class Minimap {
     constructor() {
         this.canvas = document.createElement('canvas');
         this.canvas.style.position = 'absolute';
-        this.canvas.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        this.canvas.style.backgroundColor = 'rgba(0, 0, 0, 0.85)'; // Fondo más oscuro para resaltar texto
         this.canvas.style.border = '1px solid rgba(255, 255, 255, 0.2)';
         this.canvas.style.borderRadius = '8px';
         this.canvas.style.zIndex = '100';
@@ -112,12 +112,12 @@ export class Minimap {
             ctx.setLineDash([]);
 
             // Texto del evento
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
             ctx.font = `${fontSize} Arial`;
             ctx.fillText(ev.name, 5, y - 2);
 
             // Edad aproximada
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
             ctx.font = `italic ${parseInt(fontSize) - 2}px Arial`;
             ctx.fillText(`Age: ${ev.age}`, 5, y + 10);
         });
