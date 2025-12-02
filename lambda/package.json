@@ -1,0 +1,10 @@
+{
+  "name": "metatof-life-story-lambda",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Lambda function to generate life stories using LLMs",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.700.0"
+  }
+}
