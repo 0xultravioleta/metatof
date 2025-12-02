@@ -16,14 +16,14 @@ export class StoryPanel {
         this.panel.id = 'story-panel';
         this.panel.style.cssText = `
             position: fixed;
-            top: 20px;
+            bottom: 180px;
             left: 20px;
-            width: 350px;
-            max-height: calc(100vh - 120px);
+            width: 320px;
+            height: 280px;
             background: rgba(0, 0, 0, 0.92);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
-            padding: 20px;
+            padding: 16px;
             color: #fff;
             font-family: 'Georgia', serif;
             z-index: 200;
@@ -74,8 +74,8 @@ export class StoryPanel {
         this.content = document.createElement('div');
         this.content.id = 'story-content';
         this.content.style.cssText = `
-            font-size: 14px;
-            line-height: 1.7;
+            font-size: 12px;
+            line-height: 1.5;
             color: rgba(255, 255, 255, 0.9);
         `;
 
@@ -107,16 +107,14 @@ export class StoryPanel {
             this.panel.style.width = 'calc(100vw - 40px)';
             this.panel.style.left = '20px';
             this.panel.style.right = '20px';
-            this.panel.style.maxHeight = '60vh';
-            this.panel.style.bottom = '80px';
-            this.panel.style.top = 'auto';
+            this.panel.style.height = '220px';
+            this.panel.style.bottom = '180px';
         } else {
-            this.panel.style.width = '350px';
+            this.panel.style.width = '320px';
             this.panel.style.left = '20px';
             this.panel.style.right = 'auto';
-            this.panel.style.maxHeight = 'calc(100vh - 120px)';
-            this.panel.style.top = '20px';
-            this.panel.style.bottom = 'auto';
+            this.panel.style.height = '280px';
+            this.panel.style.bottom = '180px';
         }
     }
 

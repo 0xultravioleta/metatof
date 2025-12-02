@@ -68,7 +68,8 @@ TU ESTILO ES FUNDAMENTAL:
 REGLAS ABSOLUTAS:
 - Escribe en espanol
 - Primera persona (el alma cuenta su historia)
-- Maximo 4 parrafos, cada uno con punch emocional
+- MAXIMO 2 PARRAFOS CORTOS (80 palabras total maximo)
+- Cada parrafo debe ser conciso y poetico
 - NO uses palabras como: Sefira, Qliphoth, Tikun, transmutacion, encarnacion
 - SI usa palabras como: luz, sombra, corazon, alma, camino, aprender, crecer, caer, levantarse`;
 
@@ -101,12 +102,12 @@ ${describeTrajectory(history)}
 
 ---
 
-Escribe una narrativa de 3-4 parrafos donde el alma cuenta su historia. Incluye:
-1. Como comenzaron sus primeros pasos en la vida
-2. Los momentos clave de luz y sombra, y que aprendio de cada uno
-3. El balance final y que lleva consigo para continuar su camino
+Escribe una micro-narrativa de EXACTAMENTE 2 PARRAFOS CORTOS (maximo 80 palabras en total).
 
-Cuenta la historia como si fueras un abuelo sabio junto al fuego. Haz que cada parrafo enganche al siguiente. El final debe dejar una reflexion poderosa pero sencilla.`;
+Parrafo 1: Los momentos mas significativos de luz y sombra.
+Parrafo 2: La leccion final que el alma se lleva.
+
+Se poetico pero conciso. Cada palabra debe tener peso.`;
 
   return { systemPrompt, userPrompt };
 }
@@ -147,7 +148,7 @@ async function callAnthropic(systemPrompt, userPrompt, apiKey) {
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 2000,
+      max_tokens: 300,
       system: systemPrompt,
       messages: [
         { role: "user", content: userPrompt }
@@ -173,7 +174,7 @@ async function callOpenAI(systemPrompt, userPrompt, apiKey) {
     },
     body: JSON.stringify({
       model: "gpt-4o",
-      max_tokens: 2000,
+      max_tokens: 300,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
